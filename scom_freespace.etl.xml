@@ -1,40 +1,40 @@
 <!DOCTYPE etl SYSTEM "http://scriptella.javaforge.com/dtd/etl.dtd">
 <etl>
-    <properties>
-		<include href="mysql_out_freespace.properties" />
-		<include href="mssql_in_freespace.properties" />
-    </properties>
-	<connection id="mssql_in_freespace" driver="${mssql_in_freespace.driver}" url="${mssql_in_freespace.url}" user="${mssql_in_freespace.user}" password="${mssql_in_freespace.password}" />
-	<connection id="mysql_out_freespace" driver="${mysql_out_freespace.driver}" url="${mysql_out_freespace.url}" user="${mysql_out_freespace.user}" password="${mysql_out_freespace.password}" />
+  <properties>
+    <include href="mysql_out_freespace.properties" />
+    <include href="mssql_in_freespace.properties" />
+  </properties>
+  <connection id="mssql_in_freespace" driver="${mssql_in_freespace.driver}" url="${mssql_in_freespace.url}" user="${mssql_in_freespace.user}" password="${mssql_in_freespace.password}" />
+  <connection id="mysql_out_freespace" driver="${mysql_out_freespace.driver}" url="${mysql_out_freespace.url}" user="${mysql_out_freespace.user}" password="${mysql_out_freespace.password}" />
+  
+  <!--><connection id="groovy" driver="script"></connection>-->
+  <query connection-id="mssql_in_freespace">
+    SELECT bme.Path, ps.PerfmonInstanceName, pdav.SampleValue,pdav.TimeSampled
+    FROM PerformanceDataAllView (NOLOCK) AS pdav 
+    INNER JOIN PerformanceSource (NOLOCK) ps ON pdav.PerformanceSourceInternalId = ps.PerformanceSourceInternalId
+    INNER JOIN Rules (NOLOCK) r ON ps.RuleId = r.RuleId
+    INNER JOIN BaseManagedEntity (NOLOCK) bme ON ps.BaseManagedEntityID = bme.BaseManagedEntityID
+    WHERE (r.RuleName ='Microsoft.Windows.Server.2003.LogicalDisk.FreeMB.Collection' OR r.RuleName ='Microsoft.Windows.Server.2008.LogicalDisk.FreeMB.Collection' OR r.RuleName ='Microsoft.Windows.Server.6.2.LogicalDisk.FreeMB.Collection')
+    AND pdav.TimeSampled = (SELECT MAX(TimeSampled) FROM PerformanceDataAllView WHERE PerformanceSourceInternalId = pdav.PerformanceSourceInternalId)
     
-	<!--><connection id="groovy" driver="script"></connection>-->
-    <query connection-id="mssql_in_freespace">
-		SELECT bme.Path, ps.PerfmonInstanceName, pdav.SampleValue,pdav.TimeSampled
-		FROM PerformanceDataAllView (NOLOCK) AS pdav 
-		INNER JOIN PerformanceSource (NOLOCK) ps ON pdav.PerformanceSourceInternalId = ps.PerformanceSourceInternalId
-		INNER JOIN Rules (NOLOCK) r ON ps.RuleId = r.RuleId
-		INNER JOIN BaseManagedEntity (NOLOCK) bme ON ps.BaseManagedEntityID = bme.BaseManagedEntityID
-		WHERE (r.RuleName ='Microsoft.Windows.Server.2003.LogicalDisk.FreeMB.Collection' OR r.RuleName ='Microsoft.Windows.Server.2008.LogicalDisk.FreeMB.Collection' OR r.RuleName ='Microsoft.Windows.Server.6.2.LogicalDisk.FreeMB.Collection')
-		AND pdav.TimeSampled = (SELECT MAX(TimeSampled) FROM PerformanceDataAllView WHERE PerformanceSourceInternalId = pdav.PerformanceSourceInternalId)
-		
-		<script connection-id="mysql_out_freespace">
-			INSERT INTO FreeSpace_MB(Server_name, Drive_letter, MB_free, Time)
-			VALUES (?Path, ?PerfmonInstanceName, ?SampleValue, ?TimeSampled);
-		</script>
-	</query>
-	
-    <query connection-id="mssql_in_freespace">
-		SELECT bme.Path, ps.PerfmonInstanceName, pdav.SampleValue,pdav.TimeSampled
-		FROM PerformanceDataAllView (NOLOCK) AS pdav 
-		INNER JOIN PerformanceSource (NOLOCK) ps ON pdav.PerformanceSourceInternalId = ps.PerformanceSourceInternalId
-		INNER JOIN Rules (NOLOCK) r ON ps.RuleId = r.RuleId
-		INNER JOIN BaseManagedEntity (NOLOCK) bme ON ps.BaseManagedEntityID = bme.BaseManagedEntityID
-		WHERE (r.RuleName ='Microsoft.Windows.Server.2003.LogicalDisk.FreeSpace.Collection' OR r.RuleName ='Microsoft.Windows.Server.2008.LogicalDisk.FreeSpace.Collection' OR r.RuleName ='Microsoft.Windows.Server.6.2.LogicalDisk.FreeSpace.Collection')
-		AND pdav.TimeSampled = (SELECT MAX(TimeSampled) FROM PerformanceDataAllView WHERE PerformanceSourceInternalId = pdav.PerformanceSourceInternalId)
-		
-		<script connection-id="mysql_out_freespace">
-			INSERT INTO FreeSpace_Percent(Server_name, Drive_letter, Free_space_Percentage, Time)
-			VALUES (?Path, ?PerfmonInstanceName, ?SampleValue, ?TimeSampled);
-		</script>
-	</query>
+    <script connection-id="mysql_out_freespace">
+      INSERT INTO FreeSpace_MB(Server_name, Drive_letter, MB_free, Time)
+      VALUES (?Path, ?PerfmonInstanceName, ?SampleValue, ?TimeSampled);
+    </script>
+  </query>
+  
+  <query connection-id="mssql_in_freespace">
+    SELECT bme.Path, ps.PerfmonInstanceName, pdav.SampleValue,pdav.TimeSampled
+    FROM PerformanceDataAllView (NOLOCK) AS pdav 
+    INNER JOIN PerformanceSource (NOLOCK) ps ON pdav.PerformanceSourceInternalId = ps.PerformanceSourceInternalId
+    INNER JOIN Rules (NOLOCK) r ON ps.RuleId = r.RuleId
+    INNER JOIN BaseManagedEntity (NOLOCK) bme ON ps.BaseManagedEntityID = bme.BaseManagedEntityID
+    WHERE (r.RuleName ='Microsoft.Windows.Server.2003.LogicalDisk.FreeSpace.Collection' OR r.RuleName ='Microsoft.Windows.Server.2008.LogicalDisk.FreeSpace.Collection' OR r.RuleName ='Microsoft.Windows.Server.6.2.LogicalDisk.FreeSpace.Collection')
+    AND pdav.TimeSampled = (SELECT MAX(TimeSampled) FROM PerformanceDataAllView WHERE PerformanceSourceInternalId = pdav.PerformanceSourceInternalId)
+    
+    <script connection-id="mysql_out_freespace">
+      INSERT INTO FreeSpace_Percent(Server_name, Drive_letter, Free_space_Percentage, Time)
+      VALUES (?Path, ?PerfmonInstanceName, ?SampleValue, ?TimeSampled);
+    </script>
+  </query>
 </etl>
